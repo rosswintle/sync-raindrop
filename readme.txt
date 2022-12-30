@@ -3,7 +3,7 @@ Contributors: magicroundabout
 Tags: raindrop, sync, bookmarks
 Requires at least: 5.1
 Tested up to: 6.1
-Stable tag: 1.0
+Stable tag: 1.0.2
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -65,7 +65,10 @@ Once you have installed and activated the plugin, follow the instructions in the
 
 == Changelog ==
 
-= 1.0 =
+= 1.0.2 =
+* Remove Guzzle dependency
+
+= 1.0.1 =
 * Initial version based on [Sync Pinboard](https://wordpress.org/plugins/sync-pinboard/)
 
 == Upgrade Notice ==

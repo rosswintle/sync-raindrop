@@ -8,7 +8,6 @@
 namespace SyncRaindrop;
 
 use SyncRaindrop\Sync_Raindrop;
-use GuzzleHttp\Client;
 use SyncRaindrop\Data\Raindrop_Bookmark;
 use SyncRaindrop\Sync_Raindrop_Options;
 
@@ -38,24 +37,23 @@ class Raindrop_API {
 		];
 
 		$options = wp_parse_args( $options, $default_options );
+		$query   = http_build_query( $options );
 
-		$guzzle = new Client([
-			'base_uri' => 'https://api.raindrop.io/rest/v1/',
-		]);
+		$response = wp_remote_get(
+			'https://api.raindrop.io/rest/v1/' . $method . '?' . $query,
+			[
+				'headers' => [
+					'Authorization' => 'Bearer ' . $key,
+					'Content-Type'  => 'application/json',
+				],
+			]
+		);
 
-		$response = $guzzle->get( $method, [
-			'headers' => [
-				'Authorization' => 'Bearer ' . $key,
-				'Content-Type'  => 'application/json',
-			],
-			'query' => $options,
-		] );
-
-		if (200 !== $response->getStatusCode()) {
+		if ( is_wp_error( $response ) || 200 !== wp_remote_retrieve_response_code( $response ) ) {
 			return [];
 		}
 
-		$body_text = (string) $response->getBody();
+		$body_text = wp_remote_retrieve_body( $response );
 		$body_data = json_decode($body_text);
 
 		if ( ! isset( $body_data->items ) || ! is_array( $body_data->items ) ) {
