@@ -1,4 +1,4 @@
-=== Sync Pinboard ===
+=== Sync Raindrop ===
 Contributors: magicroundabout
 Tags: raindrop, sync, bookmarks
 Requires at least: 5.1
