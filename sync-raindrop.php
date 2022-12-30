@@ -13,20 +13,20 @@
 
 namespace SyncRaindrop;
 
-require_once 'post-types/raindrop-bookmark.php';
-require_once 'data/class-raindrop-bookmark.php';
-require_once 'post-types/class-raindrop-bookmark.php';
-require_once 'taxonomies/raindrop-tag.php';
-require_once 'taxonomies/raindrop-type.php';
-require_once 'class-sync-raindrop-options.php';
-require_once 'class-sync-raindrop-admin.php';
-require_once 'class-sync-raindrop-meta-boxes.php';
-require_once 'class-sync-raindrop-cron.php';
-require_once 'class-sync-raindrop-wp-cli.php';
-require_once 'class-raindrop-api.php';
-require_once 'class-sync-raindrop-core.php';
-require_once 'blocks/bookmarks/bookmarks.php';
-require_once 'vendor/autoload.php';
+require_once __DIR__ . '/post-types/raindrop-bookmark.php';
+require_once __DIR__ . '/data/class-raindrop-bookmark.php';
+require_once __DIR__ . '/post-types/class-raindrop-bookmark.php';
+require_once __DIR__ . '/taxonomies/raindrop-tag.php';
+require_once __DIR__ . '/taxonomies/raindrop-type.php';
+require_once __DIR__ . '/class-sync-raindrop-options.php';
+require_once __DIR__ . '/class-sync-raindrop-admin.php';
+require_once __DIR__ . '/class-sync-raindrop-meta-boxes.php';
+require_once __DIR__ . '/class-sync-raindrop-cron.php';
+require_once __DIR__ . '/class-sync-raindrop-wp-cli.php';
+require_once __DIR__ . '/class-raindrop-api.php';
+require_once __DIR__ . '/class-sync-raindrop-core.php';
+require_once __DIR__ . '/blocks/bookmarks/bookmarks.php';
+require_once __DIR__ . '/vendor/autoload.php';
 
 /**
  * Sync Raindrop class
@@ -53,7 +53,7 @@ class Sync_Raindrop {
 		new Sync_Raindrop_Cron();
 		new Sync_Raindrop_Meta_Boxes();
 		new Sync_Raindrop_WPCLI();
-		new Blocks\Bookmarks();
+		new \SyncRaindrop\Blocks\Bookmarks();
 	}
 
 	/**
