@@ -4,13 +4,13 @@ namespace SyncRaindrop;
 
 class Raindrop_Bookmark {
 
-	public static function with_hash( $hash ) {
+	public static function with_id( $id ) {
 		$posts = get_posts([
 			'post_type'  => 'raindrop-bookmark',
 			'meta_query' => [
 				[
-					'key'   => 'hash',
-					'value' => $hash,
+					'key'   => 'raindrop_id',
+					'value' => $id,
 				],
 			],
 		]);

@@ -5,6 +5,7 @@
 
 namespace SyncRaindrop;
 
+use SyncRaindrop\Sync_Raindrop;
 use SyncRaindrop\Raindrop_API;
 use SyncRaindrop\Sync_Raindrop_Options;
 
@@ -28,67 +29,97 @@ class Sync_Raindrop_Core {
 	public function sync() {
 		$api = new Raindrop_API();
 
-		Sync_Raindrop::log( 'Getting last update time' );
+		Sync_Raindrop::log( 'Getting last bookmark from WordPress' );
 
-		$last_update_data = $api->call( 'posts/update' );
+		$latest_bookmarks = get_posts( [
+			'post_type' => 'raindrop-bookmark',
+			'posts_per_page' => 1,
+			'orderby' => 'date',
+			'order' => 'DESC',
+		] );
 
-		if ( ! $last_update_data ) {
-			Sync_Raindrop::error( 'Couldn\'t get last update time' );
-			exit;
+		if ( empty( $latest_bookmarks ) ) {
+			Sync_Raindrop::log( 'No last bookmarks found. This will sync all!' );
+			$latest_bookmark_date = 0;
+		} else {
+			Sync_Raindrop::log( 'Last bookmark found: ' . $latest_bookmarks[0]->post_date_gmt );
+			$latest_bookmark_date = strtotime( $latest_bookmarks[0]->post_date_gmt );
 		}
 
-		$last_update_time = $last_update_data->update_time;
+		$fetch_finished = false;
+		$page = 0;
+		$new_bookmarks = [];
 
-		// Compare last update time to last sync to see if anything is new.
-		if ( strtotime( $last_update_time ) < $this->last_sync ) {
-			Sync_Raindrop::log( 'Nothing new to sync' );
-			return;
+		while ( ! $fetch_finished ) {
+			Sync_Raindrop::log( 'Fetching page ' . $page . ' of bookmarks' );
+
+			$fetched_bookmarks = $api->posts_latest( ['page' => $page ] );
+
+			if ( ! is_array( $fetched_bookmarks ) || empty( $fetched_bookmarks ) ) {
+				$fetch_finished = true;
+				continue;
+			}
+
+			// TEMP
+			if ($page > 5) {
+				$fetch_finished = true;
+				continue;
+			}
+
+			Sync_Raindrop::log( 'Fetched ' . count($fetched_bookmarks) . ' bookmarks' );
+
+			foreach ( $fetched_bookmarks as $bookmark ) {
+				if ( $bookmark->created > $latest_bookmark_date ) {
+					// Sync_Raindrop::log( 'Bookmark created at ' . $bookmark->created . ' is newer than latest bookmark date ' . $latest_bookmark_date );
+					$new_bookmarks[] = $bookmark;
+				} else {
+					$fetch_finished = true;
+					break;
+				}
+			}
+
+			$page++;
 		}
 
-		// Can't make API calls less than 3 seconds apart.
-		sleep( 4 );
-
-		$new_pins = $api->posts_all( [ 'fromdt' => date( 'Y-m-d\TH:i:s\Z', $this->last_sync ) ] );
-
-		if ( ! is_array( $new_pins ) ) {
+		if ( ! is_array( $new_bookmarks ) ) {
 			Sync_Raindrop::error( 'Tried sync, but no new bookmarks were retrieved' );
 			return;
 		}
 
-		Sync_Raindrop::log( 'Retrieved ' . count($new_pins) . ' from Raindrop' );
+		Sync_Raindrop::log( 'Retrieved ' . count($new_bookmarks) . ' from Raindrop' );
 
 		// Get the author ID to use.
 		$author_id = Sync_Raindrop_Options::get_pin_author();
 
 		// Loop through bookmarks creating posts for them.
-		foreach ( $new_pins as $pin ) {
+		foreach ( $new_bookmarks as $bookmark ) {
 
-			Sync_Raindrop::log( 'Syncing bookmark: ' . $pin->description );
+			Sync_Raindrop::log( 'Syncing bookmark: ' . $bookmark->title );
 
 			$post_data = [
 				'post_type'    => 'raindrop-bookmark',
-				'post_date'    => date( 'Y-m-d H:i:s', Sync_Raindrop::make_time_local( strtotime($pin->time) ) ),
-				'post_title'   => $pin->description,
-				'post_content' => $pin->extended,
-				'post_status'  => 'yes' === $pin->shared ? 'publish' : 'private',
-				'meta_input'   => [
-					'hash'     => $pin->hash,
-					'url'      => $pin->href,
+				'post_date'    => date( 'Y-m-d H:i:s', Sync_Raindrop::make_time_local( $bookmark->created ) ),
+				'post_title'   => $bookmark->title,
+				'post_content' => $bookmark->excerpt,
+				// 'post_status'  => 'yes' === $bookmark->shared ? 'publish' : 'private',
+				'post_status'  => 'publish',
+				'meta_input'      => [
+					'url'         => $bookmark->link,
+					'raindrop_id' => $bookmark->id,
 				],
 				'post_author'  => $author_id,
 			];
 
-			$existing_pin = Raindrop_Bookmark::with_hash( $pin->hash );
-			if ( $existing_pin ) {
-				$post_data['ID'] = $existing_pin->ID;
-				Sync_Raindrop::log( 'Existing bookmark with ID ' . $existing_pin->ID . ' found. Will update.' );
+			$existing_bookmark = Raindrop_Bookmark::with_id( $bookmark->id );
+			if ( $existing_bookmark ) {
+				$post_data['ID'] = $existing_bookmark->ID;
+				Sync_Raindrop::log( 'Existing bookmark with ID ' . $existing_bookmark->ID . ' found. Will update.' );
 			}
 
 			$result = wp_insert_post( $post_data );
 
 			if ( $result > 0 ) {
-				$terms = explode( ' ', $pin->tags );
-				wp_set_post_terms( $result, $terms, 'raindrop-tag' );
+				wp_set_post_terms( $result, $bookmark->tags, 'raindrop-tag' );
 			}
 
 		}

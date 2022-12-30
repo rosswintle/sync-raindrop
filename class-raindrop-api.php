@@ -7,7 +7,10 @@
 
 namespace SyncRaindrop;
 
+use SyncRaindrop\Sync_Raindrop;
 use GuzzleHttp\Client;
+use SyncRaindrop\Data\Raindrop_Bookmark;
+use SyncRaindrop\Sync_Raindrop_Options;
 
 /**
  * Class for using the Raindrop.io API
@@ -19,18 +22,19 @@ class Raindrop_API {
 	 *
 	 * @param  string $method
 	 * @param  array $options
-	 * @return array|null
+	 * @return Raindrop_Bookmark[]
 	 */
 	public function call( $method, $options = [] ) {
 		$key = Sync_Raindrop_Options::get_api_key();
 
 		if (! $key) {
-			return null;
+			return [];
 		}
 
 		$default_options = [
-			'format'     => 'json',
-			'auth_token' => $key,
+			'sort'         => '-created',
+			'page'         => 1,
+			'perpage'      => 50,
 		];
 
 		$options = wp_parse_args( $options, $default_options );
@@ -39,30 +43,59 @@ class Raindrop_API {
 			'base_uri' => 'https://api.raindrop.io/rest/v1/',
 		]);
 
-		$response = $guzzle->get( $method, ['query' => $options] );
+		$response = $guzzle->get( $method, [
+			'headers' => [
+				'Authorization' => 'Bearer ' . $key,
+				'Content-Type'  => 'application/json',
+			],
+			'query' => $options,
+		] );
 
 		if (200 !== $response->getStatusCode()) {
-			return null;
+			return [];
 		}
 
-		$bodyText = (string) $response->getBody();
-		$bodyData = json_decode($bodyText);
+		$body_text = (string) $response->getBody();
+		$body_data = json_decode($body_text);
 
-		return $bodyData;
+		if ( ! isset( $body_data->items ) || ! is_array( $body_data->items ) ) {
+			return [];
+		}
+
+		return $this->make_bookmarks_array( $body_data->items );
 	}
 
-	public function posts_all( $options ) {
-		// We use a timestamp in a transient to suspend calls for the next 5 minutes
-		// as this API method can only be called every 5 minutes
-		$suspended = get_transient( 'raindrop-posts-all-suspended' );
-		if ( false !== $suspended ) {
-			echo "Slow down!";
-			return null;
+	/**
+	 * Convert an array of items returned by the API into an array of
+	 * Raindrop_Bookmark objects
+	 *
+	 * @param  array $items Items to be converted
+	 * @return Raindrop_Bookmark[]
+	 */
+	public function make_bookmarks_array( $items = [] ) {
+		$bookmarks = [];
+
+		foreach ( $items as $item ) {
+			$bookmark    = Raindrop_Bookmark::from_api_object( $item );
+			$bookmarks[] = $bookmark;
 		}
 
-		set_transient( 'raindrop-posts-all-suspended', time(), 5 * 60 );
+		return $bookmarks;
+	}
 
-		return $this->call( 'posts/all', $options );
+	public function posts_latest( $options = [] ) {
+		// We use a timestamp in a transient to suspend calls for a 1 seconds
+		// to avoid completely spamming the API.
+		$suspended = get_transient( 'raindrop-posts-all-suspended' );
+		if ( false !== $suspended ) {
+			Sync_Raindrop::log( "Waiting for API..." );
+			// Wait for a second to ensure we are past the transient delay
+			sleep( 1 );
+		}
+
+		set_transient( 'raindrop-posts-all-suspended', time(), 1 );
+
+		return $this->call( 'raindrops/0', $options );
 	}
 
 }
