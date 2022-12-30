@@ -17,6 +17,7 @@ require_once 'post-types/raindrop-bookmark.php';
 require_once 'data/class-raindrop-bookmark.php';
 require_once 'post-types/class-raindrop-bookmark.php';
 require_once 'taxonomies/raindrop-tag.php';
+require_once 'taxonomies/raindrop-type.php';
 require_once 'class-sync-raindrop-options.php';
 require_once 'class-sync-raindrop-admin.php';
 require_once 'class-sync-raindrop-meta-boxes.php';

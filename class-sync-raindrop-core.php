@@ -60,12 +60,6 @@ class Sync_Raindrop_Core {
 				continue;
 			}
 
-			// TEMP
-			if ($page > 5) {
-				$fetch_finished = true;
-				continue;
-			}
-
 			Sync_Raindrop::log( 'Fetched ' . count($fetched_bookmarks) . ' bookmarks' );
 
 			foreach ( $fetched_bookmarks as $bookmark ) {
@@ -120,6 +114,7 @@ class Sync_Raindrop_Core {
 
 			if ( $result > 0 ) {
 				wp_set_post_terms( $result, $bookmark->tags, 'raindrop-tag' );
+				wp_set_post_terms( $result, $bookmark->type, 'raindrop-type' );
 			}
 
 		}
