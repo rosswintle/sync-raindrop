@@ -20,11 +20,18 @@ class Raindrop_Bookmark {
 	public $created = 0;
 
 	/**
-	 * The description of the bookmark.
+	 * The description of the bookmark - usually the bookmarked page's meta description.
 	 *
 	 * @var string
 	 */
 	public $excerpt = '';
+
+	/**
+	 * User-added note
+	 *
+	 * @var string
+	 */
+	public $note = '';
 
 	/**
 	 * The last update - this will be a Unix timestamp
@@ -45,7 +52,7 @@ class Raindrop_Bookmark {
 	 *
 	 * @var string[]
 	 */
-	public $tags = [];
+	public $tags = array();
 
 	/**
 	 * The link title
@@ -71,7 +78,7 @@ class Raindrop_Bookmark {
 		$bookmark = new self();
 		foreach ( $data as $key => $value ) {
 			if ( property_exists( $bookmark, $key ) ) {
-				if ( in_array( $key, [ 'created', 'last_updated' ], true ) ) {
+				if ( in_array( $key, array( 'created', 'last_updated' ), true ) ) {
 					$bookmark->$key = strtotime( $value );
 				} else {
 					$bookmark->$key = $value;
