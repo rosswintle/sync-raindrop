@@ -15,6 +15,7 @@ namespace SyncRaindrop;
 
 require_once __DIR__ . '/post-types/raindrop-bookmark.php';
 require_once __DIR__ . '/data/class-raindrop-bookmark.php';
+require_once __DIR__ . '/data/class-raindrop-collection.php';
 require_once __DIR__ . '/post-types/class-raindrop-bookmark.php';
 require_once __DIR__ . '/taxonomies/raindrop-tag.php';
 require_once __DIR__ . '/taxonomies/raindrop-type.php';
@@ -38,8 +39,8 @@ class Sync_Raindrop {
 	 */
 	public function __construct() {
 		// Initial hooks.
-		add_action( 'init', [ $this, 'init_hooks' ] );
-		add_action( 'admin_menu', [ $this, 'admin_menu_hooks' ] );
+		add_action( 'init', array( $this, 'init_hooks' ) );
+		add_action( 'admin_menu', array( $this, 'admin_menu_hooks' ) );
 
 		$this->register_deactivation_hook();
 	}
@@ -72,21 +73,21 @@ class Sync_Raindrop {
 	 * @return void
 	 */
 	public function register_deactivation_hook() {
-	   register_deactivation_hook( __FILE__, [ $this, 'run_deactivation_hook' ] );
+		register_deactivation_hook( __FILE__, array( $this, 'run_deactivation_hook' ) );
 	}
 
 	/**
 	 * This actually does the sync_raindrop_deactivate hook
 	 */
 	public function run_deactivation_hook() {
-		do_action('sync_raindrop_deactivate');
+		do_action( 'sync_raindrop_deactivate' );
 	}
 
 	/**
 	 * This takes a timestamp and turns it into local time using the gmt_offset options
 	 */
 	public static function make_time_local( $timestamp ) {
-		$offset_secs = ((int)get_option('gmt_offset')) * 60 * 60;
+		$offset_secs = ( (int) get_option( 'gmt_offset' ) ) * 60 * 60;
 		return $timestamp + $offset_secs;
 	}
 
@@ -94,7 +95,7 @@ class Sync_Raindrop {
 	 * This does information logging based on how the sync has been called
 	 */
 	public static function log( $message ) {
-		if (class_exists('WP_CLI')) {
+		if ( class_exists( 'WP_CLI' ) ) {
 			\WP_CLI::log( $message );
 		}
 		return;
@@ -104,11 +105,10 @@ class Sync_Raindrop {
 	 * This does error logging based on how the sync has been called
 	 */
 	public static function error( $message ) {
-		if (class_exists('WP_CLI')) {
+		if ( class_exists( 'WP_CLI' ) ) {
 			\WP_CLI::error( $message );
 		}
 	}
-
 }
 
 $syncrd_instance = new Sync_Raindrop();
