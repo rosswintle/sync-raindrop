@@ -52,10 +52,12 @@ class Sync_Raindrop_Core {
 		$page           = 0;
 		$new_bookmarks  = array();
 
+		$collection_to_sync = Sync_Raindrop_Options::get_pin_collection_to_sync();
+
 		while ( ! $fetch_finished ) {
 			Sync_Raindrop::log( 'Fetching page ' . $page . ' of bookmarks' );
 
-			$fetched_bookmarks = $api->posts_latest( array( 'page' => $page ) );
+			$fetched_bookmarks = $api->posts_in_collection( $collection_to_sync, array( 'page' => $page ) );
 
 			if ( ! is_array( $fetched_bookmarks ) || empty( $fetched_bookmarks ) ) {
 				$fetch_finished = true;

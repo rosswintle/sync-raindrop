@@ -17,6 +17,17 @@ class Sync_Raindrop_Options {
 		return update_option( 'sync-raindrop-api-key', $value );
 	}
 
+	/**
+	 * Defaults to 0 = all raindrops collection
+	 */
+	public static function get_pin_collection_to_sync() {
+		return get_option( 'sync-raindrop-collection-to-sync', 0 );
+	}
+
+	public static function set_pin_collection_to_sync( $value ) {
+		return update_option( 'sync-raindrop-collection-to-sync', $value );
+	}
+
 	public static function get_pin_author() {
 		return get_option( 'sync-raindrop-author' );
 	}
@@ -26,11 +37,10 @@ class Sync_Raindrop_Options {
 	}
 
 	public static function get_pin_sync_status() {
-		return (int)get_option( 'sync-raindrop-status' );
+		return (int) get_option( 'sync-raindrop-status' );
 	}
 
 	public static function set_pin_sync_status( $value ) {
 		return update_option( 'sync-raindrop-status', $value );
 	}
-
 }
