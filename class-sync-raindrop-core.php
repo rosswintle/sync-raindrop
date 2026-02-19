@@ -104,6 +104,7 @@ class Sync_Raindrop_Core {
 				'meta_input'   => array(
 					'url'         => $bookmark->link,
 					'raindrop_id' => $bookmark->id,
+					'note'        => $bookmark->note,
 				),
 				'post_author'  => $author_id,
 			);
