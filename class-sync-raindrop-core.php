@@ -15,7 +15,7 @@ use SyncRaindrop\Sync_Raindrop_Options;
 class Sync_Raindrop_Core {
 
 	// Time of last "recent" method call - this can only be called every minute
-	//protected $last_recent_call = null;
+	// protected $last_recent_call = null;
 
 	// Timestamp of the last sync
 	protected $last_sync = null;
@@ -31,12 +31,14 @@ class Sync_Raindrop_Core {
 
 		Sync_Raindrop::log( 'Getting last bookmark from WordPress' );
 
-		$latest_bookmarks = get_posts( [
-			'post_type' => 'raindrop-bookmark',
-			'posts_per_page' => 1,
-			'orderby' => 'date',
-			'order' => 'DESC',
-		] );
+		$latest_bookmarks = get_posts(
+			array(
+				'post_type'      => 'raindrop-bookmark',
+				'posts_per_page' => 1,
+				'orderby'        => 'date',
+				'order'          => 'DESC',
+			)
+		);
 
 		if ( empty( $latest_bookmarks ) ) {
 			Sync_Raindrop::log( 'No last bookmarks found. This will sync all!' );
@@ -47,20 +49,22 @@ class Sync_Raindrop_Core {
 		}
 
 		$fetch_finished = false;
-		$page = 0;
-		$new_bookmarks = [];
+		$page           = 0;
+		$new_bookmarks  = array();
+
+		$collection_to_sync = Sync_Raindrop_Options::get_pin_collection_to_sync();
 
 		while ( ! $fetch_finished ) {
 			Sync_Raindrop::log( 'Fetching page ' . $page . ' of bookmarks' );
 
-			$fetched_bookmarks = $api->posts_latest( ['page' => $page ] );
+			$fetched_bookmarks = $api->posts_in_collection( $collection_to_sync, array( 'page' => $page ) );
 
 			if ( ! is_array( $fetched_bookmarks ) || empty( $fetched_bookmarks ) ) {
 				$fetch_finished = true;
 				continue;
 			}
 
-			Sync_Raindrop::log( 'Fetched ' . count($fetched_bookmarks) . ' bookmarks' );
+			Sync_Raindrop::log( 'Fetched ' . count( $fetched_bookmarks ) . ' bookmarks' );
 
 			foreach ( $fetched_bookmarks as $bookmark ) {
 				if ( $bookmark->created > $latest_bookmark_date ) {
@@ -72,7 +76,7 @@ class Sync_Raindrop_Core {
 				}
 			}
 
-			$page++;
+			++$page;
 		}
 
 		if ( ! is_array( $new_bookmarks ) ) {
@@ -80,7 +84,7 @@ class Sync_Raindrop_Core {
 			return;
 		}
 
-		Sync_Raindrop::log( 'Retrieved ' . count($new_bookmarks) . ' from Raindrop' );
+		Sync_Raindrop::log( 'Retrieved ' . count( $new_bookmarks ) . ' from Raindrop' );
 
 		// Get the author ID to use.
 		$author_id = Sync_Raindrop_Options::get_pin_author();
@@ -90,19 +94,19 @@ class Sync_Raindrop_Core {
 
 			Sync_Raindrop::log( 'Syncing bookmark: ' . $bookmark->title );
 
-			$post_data = [
+			$post_data = array(
 				'post_type'    => 'raindrop-bookmark',
 				'post_date'    => date( 'Y-m-d H:i:s', Sync_Raindrop::make_time_local( $bookmark->created ) ),
 				'post_title'   => $bookmark->title,
 				'post_content' => $bookmark->excerpt,
 				// 'post_status'  => 'yes' === $bookmark->shared ? 'publish' : 'private',
 				'post_status'  => 'publish',
-				'meta_input'      => [
+				'meta_input'   => array(
 					'url'         => $bookmark->link,
 					'raindrop_id' => $bookmark->id,
-				],
+				),
 				'post_author'  => $author_id,
-			];
+			);
 
 			$existing_bookmark = Raindrop_Bookmark::with_id( $bookmark->id );
 			if ( $existing_bookmark ) {
@@ -116,13 +120,10 @@ class Sync_Raindrop_Core {
 				wp_set_post_terms( $result, $bookmark->tags, 'raindrop-tag' );
 				wp_set_post_terms( $result, $bookmark->type, 'raindrop-type' );
 			}
-
 		}
 
 		// Update last sync time
 		$this->last_sync = time();
-		update_option( 'sync-raindrop-last-sync',  $this->last_sync );
-
+		update_option( 'sync-raindrop-last-sync', $this->last_sync );
 	}
-
 }
