@@ -2,8 +2,8 @@
 Contributors: magicroundabout
 Tags: raindrop, sync, bookmarks
 Requires at least: 5.1
-Tested up to: 6.1
-Stable tag: 1.0.2
+Tested up to: 6.9
+Stable tag: 1.1.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -21,6 +21,7 @@ This plugin:
 * uses the official Raindrop API (you will need an API token)
 * obeys the API's rate limits
 * allows you to choose an author for synced bookmarks
+* allows you to choose a collection to sync (defaults to all bookmarks)
 * updates bookmarks in Raindrop that have been updated (I think!) but will not remove bookmarks that have been deleted
 * provides a Gutenberg/block editor block for display a list of bookmarks created between two specified dates
 
@@ -47,7 +48,6 @@ do an import from Raindrop. This works particularly well for large first-time im
 Things I have in mind for future development:
 
 * A shortcode for outputting lists of bookmarks
-* Ability to only import a specified tag
 * (DONE) A Gutenberg block for displaying bookmarks
 * Option in wp-cli command to allow re-import of all bookmarks
 * Better front-end validation in admin screens and meta boxes
@@ -64,6 +64,9 @@ Once you have installed and activated the plugin, follow the instructions in the
 2. List of sync'ed bookmarks
 
 == Changelog ==
+
+= 1.1.0 =
+* Add collection-specific sync and sync of notes
 
 = 1.0.2 =
 * Remove Guzzle dependency
